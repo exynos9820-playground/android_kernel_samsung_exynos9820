@@ -775,8 +775,8 @@ void fimc_is_sec_check_module_state(struct fimc_is_rom_info *finfo)
 int fimc_is_i2c_read(struct i2c_client *client, void *buf, u32 addr, size_t size)
 {
 	const u32 addr_size = 2, max_retry = 2;
-	u8 addr_buf[addr_size];
-	int retries = max_retry;
+	u8 addr_buf[2];
+	int retries = 2;
 	int ret = 0;
 
 	if (!client) {
@@ -823,8 +823,8 @@ int fimc_is_i2c_read(struct i2c_client *client, void *buf, u32 addr, size_t size
 int fimc_is_i2c_write(struct i2c_client *client, u16 addr, u8 data)
 {
 	const u32 write_buf_size = 3, max_retry = 2;
-	u8 write_buf[write_buf_size];
-	int retries = max_retry;
+	u8 write_buf[3];
+	int retries = 2;
 	int ret = 0;
 
 	if (!client) {
