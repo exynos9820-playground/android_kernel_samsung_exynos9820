@@ -434,16 +434,16 @@
 				energy-weight = <1>;
 			};
 			PROMETHEUS_ENERGY: prometheus-energy {
-				capacity-mips = <531>;
+				capacity-mips = <630>;
 				power-coefficient = <320>;
 				capacity-mips-s = <346>;
 				power-coefficient-s = <259>;
 
-				capacity-weight = <2>;
-				energy-weight = <1>;
+				capacity-weight = <1>;
+				energy-weight = <2>;
 			};
 			CHEETAH_ENERGY: cheetah-energy {
-				capacity-mips = <785>;
+				capacity-mips = <1024>;
 				power-coefficient = <760>;
 				capacity-mips-s = <365>;
 				power-coefficient-s = <506>;
