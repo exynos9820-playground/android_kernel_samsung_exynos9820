@@ -37,11 +37,11 @@ int sec_vib_notifier_register(struct notifier_block *n)
 {
 	int ret = 0;
 
-	pr_info("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	ret = blocking_notifier_chain_register(&sec_vib_nb_head, n);
 	if (ret < 0)
-		pr_err("%s: failed(%d)\n", __func__, ret);
+		pr_debug("%s: failed(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -50,11 +50,11 @@ int sec_vib_notifier_unregister(struct notifier_block *nb)
 {
 	int ret = 0;
 
-	pr_info("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
 	ret = blocking_notifier_chain_unregister(&sec_vib_nb_head, nb);
 	if (ret < 0)
-		pr_err("%s: failed(%d)\n", __func__, ret);
+		pr_debug("%s: failed(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -66,7 +66,7 @@ int sec_vib_notifier_notify(int en, struct sec_vibrator_drvdata *ddata)
 	vib_notifier.index = ddata->index;
 	vib_notifier.timeout = ddata->timeout;
 
-	pr_info("%s: %s, idx: %d timeout: %d\n", __func__, en ? "ON" : "OFF", vib_notifier.index, vib_notifier.timeout);
+	pr_debug("%s: %s, idx: %d timeout: %d\n", __func__, en ? "ON" : "OFF", vib_notifier.index, vib_notifier.timeout);
 
 	ret = blocking_notifier_call_chain(&sec_vib_nb_head,
 			en, &vib_notifier);
@@ -74,10 +74,10 @@ int sec_vib_notifier_notify(int en, struct sec_vibrator_drvdata *ddata)
 	switch (ret) {
 	case NOTIFY_DONE:
 	case NOTIFY_OK:
-		pr_info("%s done(0x%x)\n", __func__, ret);
+		pr_debug("%s done(0x%x)\n", __func__, ret);
 		break;
 	default:
-		pr_info("%s failed(0x%x)\n", __func__, ret);
+		pr_debug("%s failed(0x%x)\n", __func__, ret);
 		break;
 	}
 
@@ -99,7 +99,7 @@ static int sec_vibrator_check_temp(struct sec_vibrator_drvdata *ddata)
 	ret = ddata->vib_ops->set_tuning_with_temp(ddata->dev, value.intval);
 
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -115,14 +115,14 @@ static int sec_vibrator_set_frequency(struct sec_vibrator_drvdata *ddata, int fr
 	if ((frequency < FREQ_ALERT) ||
 	    ((frequency >= FREQ_MAX) && (frequency < HAPTIC_ENGINE_FREQ_MIN)) ||
 	    (frequency > HAPTIC_ENGINE_FREQ_MAX)) {
-		pr_err("%s out of range(%d)\n", __func__, frequency);
+		pr_debug("%s out of range(%d)\n", __func__, frequency);
 		return -EINVAL;
 	}
 
 	ret = ddata->vib_ops->set_frequency(ddata->dev, frequency);
 
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -135,14 +135,14 @@ static int sec_vibrator_set_intensity(struct sec_vibrator_drvdata *ddata, int in
 		return -ENOSYS;
 
 	if ((intensity < -(MAX_INTENSITY)) || (intensity > MAX_INTENSITY)) {
-		pr_err("%s out of range(%d)\n", __func__, intensity);
+		pr_debug("%s out of range(%d)\n", __func__, intensity);
 		return -EINVAL;
 	}
 
 	ret = ddata->vib_ops->set_intensity(ddata->dev, intensity);
 
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -155,14 +155,14 @@ static int sec_vibrator_set_force_touch_intensity(struct sec_vibrator_drvdata *d
 		return -ENOSYS;
 
 	if ((intensity < -(MAX_INTENSITY)) || (intensity > MAX_INTENSITY)) {
-		pr_err("%s out of range(%d)\n", __func__, intensity);
+		pr_debug("%s out of range(%d)\n", __func__, intensity);
 		return -EINVAL;
 	}
 
 	ret = ddata->vib_ops->set_force_touch_intensity(ddata->dev, intensity);
 
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -172,13 +172,13 @@ static int sec_vibrator_set_enable(struct sec_vibrator_drvdata *ddata, bool en)
 	int ret = 0;
 
 	if (!ddata->vib_ops->enable) {
-		pr_err("%s cannot supported\n", __func__);
+		pr_debug("%s cannot supported\n", __func__);
 		return -ENOSYS;
 	}
 
 	ret = ddata->vib_ops->enable(ddata->dev, en);
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 #if IS_ENABLED(CONFIG_SEC_VIB_NOTIFIER)
 	sec_vib_notifier_notify(en, ddata);
@@ -195,7 +195,7 @@ static int sec_vibrator_set_overdrive(struct sec_vibrator_drvdata *ddata, bool e
 
 	ret = ddata->vib_ops->set_overdrive(ddata->dev, en);
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return ret;
 }
@@ -210,11 +210,11 @@ static void sec_vibrator_haptic_enable(struct sec_vibrator_drvdata *ddata)
 	sec_vibrator_set_enable(ddata, true);
 
 	if (ddata->vib_ops->set_frequency)
-		pr_info("freq:%d, intensity:%d, %dms\n", ddata->frequency, ddata->intensity, ddata->timeout);
+		pr_debug("freq:%d, intensity:%d, %dms\n", ddata->frequency, ddata->intensity, ddata->timeout);
 	else if (ddata->vib_ops->set_intensity)
-		pr_info("intensity:%d, %dms\n", ddata->intensity, ddata->timeout);
+		pr_debug("intensity:%d, %dms\n", ddata->intensity, ddata->timeout);
 	else
-		pr_info("%dms\n", ddata->timeout);
+		pr_debug("%dms\n", ddata->timeout);
 }
 
 static void sec_vibrator_haptic_disable(struct sec_vibrator_drvdata *ddata)
@@ -237,9 +237,9 @@ static void sec_vibrator_haptic_disable(struct sec_vibrator_drvdata *ddata)
 	sec_vibrator_set_intensity(ddata, 0);
 
 	if (ddata->timeout > 0)
-		pr_info("timeout, off\n");
+		pr_debug("timeout, off\n");
 	else
-		pr_info("off\n");
+		pr_debug("off\n");
 }
 
 static void sec_vibrator_engine_run_packet(struct sec_vibrator_drvdata *ddata, struct vib_packet packet)
@@ -249,7 +249,7 @@ static void sec_vibrator_engine_run_packet(struct sec_vibrator_drvdata *ddata, s
 	int overdrive = packet.overdrive;
 
 	if (!ddata->f_packet_en) {
-		pr_err("haptic packet is empty\n");
+		pr_debug("haptic packet is empty\n");
 		return;
 	}
 
@@ -258,20 +258,20 @@ static void sec_vibrator_engine_run_packet(struct sec_vibrator_drvdata *ddata, s
 	if (intensity) {
 		sec_vibrator_set_intensity(ddata, intensity);
 		if (!ddata->packet_running) {
-			pr_info("[haptic engine] motor run\n");
+			pr_debug("[haptic engine] motor run\n");
 			sec_vibrator_set_enable(ddata, true);
 		}
 		ddata->packet_running = true;
 	} else {
 		if (ddata->packet_running) {
-			pr_info("[haptic engine] motor stop\n");
+			pr_debug("[haptic engine] motor stop\n");
 			sec_vibrator_set_enable(ddata, false);
 		}
 		ddata->packet_running = false;
 		sec_vibrator_set_intensity(ddata, intensity);
 	}
 
-	pr_info("%s [%d] freq:%d, intensity:%d, time:%d overdrive: %d\n",
+	pr_debug("%s [%d] freq:%d, intensity:%d, time:%d overdrive: %d\n",
 		__func__, ddata->packet_cnt, frequency, intensity, ddata->timeout, overdrive);
 }
 
@@ -310,7 +310,7 @@ static enum hrtimer_restart haptic_timer_func(struct hrtimer *timer)
 {
 	struct sec_vibrator_drvdata *ddata = container_of(timer, struct sec_vibrator_drvdata, timer);
 
-	pr_info("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	kthread_queue_work(&ddata->kworker, &ddata->kwork);
 	return HRTIMER_NORESTART;
 }
@@ -350,14 +350,14 @@ static ssize_t intensity_store(struct device *dev, struct device_attribute *deva
 
 	ret = kstrtoint(buf, 0, &intensity);
 	if (ret) {
-		pr_err("fail to get intensity\n");
+		pr_debug("fail to get intensity\n");
 		return -EINVAL;
 	}
 
-	pr_info("%s %d\n", __func__, intensity);
+	pr_debug("%s %d\n", __func__, intensity);
 
 	if ((intensity < 0) || (intensity > MAX_INTENSITY)) {
-		pr_err("[VIB]: %s out of range\n", __func__);
+		pr_debug("[VIB]: %s out of range\n", __func__);
 		return -EINVAL;
 	}
 
@@ -380,14 +380,14 @@ static ssize_t force_touch_intensity_store(struct device *dev, struct device_att
 
 	ret = kstrtoint(buf, 0, &intensity);
 	if (ret) {
-		pr_err("fail to get intensity\n");
+		pr_debug("fail to get intensity\n");
 		return -EINVAL;
 	}
 
-	pr_info("%s %d\n", __func__, intensity);
+	pr_debug("%s %d\n", __func__, intensity);
 
 	if ((intensity < 0) || (intensity > MAX_INTENSITY)) {
-		pr_err("[VIB]: %s out of range\n", __func__);
+		pr_debug("[VIB]: %s out of range\n", __func__);
 		return -EINVAL;
 	}
 
@@ -410,11 +410,11 @@ static ssize_t multi_freq_store(struct device *dev, struct device_attribute *dev
 
 	ret = kstrtoint(buf, 0, &num);
 	if (ret) {
-		pr_err("fail to get frequency\n");
+		pr_debug("fail to get frequency\n");
 		return -EINVAL;
 	}
 
-	pr_info("%s %d\n", __func__, num);
+	pr_debug("%s %d\n", __func__, num);
 
 	ddata->frequency = num;
 
@@ -438,7 +438,7 @@ static ssize_t haptic_engine_store(struct device *dev, struct device_attribute *
 		return count;
 
 	if (_data > PACKET_MAX_SIZE * VIB_PACKET_MAX) {
-		pr_info("%s, [%d] packet size over\n", __func__, _data);
+		pr_debug("%s, [%d] packet size over\n", __func__, _data);
 	} else {
 		ddata->packet_size = _data / VIB_PACKET_MAX;
 		ddata->packet_cnt = 0;
@@ -449,13 +449,13 @@ static ssize_t haptic_engine_store(struct device *dev, struct device_attribute *
 		for (i = 0; i < ddata->packet_size; i++) {
 			for (tmp = 0; tmp < VIB_PACKET_MAX; tmp++) {
 				if (buf == NULL) {
-					pr_err("%s, buf is NULL, Please check packet data again\n", __func__);
+					pr_debug("%s, buf is NULL, Please check packet data again\n", __func__);
 					ddata->f_packet_en = false;
 					return count;
 				}
 
 				if (sscanf(buf++, "%6d", &_data) != 1) {
-					pr_err("%s, packet data error, Please check packet data again\n", __func__);
+					pr_debug("%s, packet data error, Please check packet data again\n", __func__);
 					ddata->f_packet_en = false;
 					return count;
 				}
@@ -527,7 +527,7 @@ static ssize_t cp_trigger_index_store(struct device *dev, struct device_attribut
 
 	ret = ddata->vib_ops->set_cp_trigger_index(ddata->dev, index);
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	ddata->index = index;
 
@@ -544,7 +544,7 @@ static ssize_t cp_trigger_queue_show(struct device *dev, struct device_attribute
 
 	ret = ddata->vib_ops->get_cp_trigger_queue(ddata->dev, buf);
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return snprintf(buf, PAGE_SIZE, "%s\n", buf);
 }
@@ -559,7 +559,7 @@ static ssize_t cp_trigger_queue_store(struct device *dev, struct device_attribut
 
 	ret = ddata->vib_ops->set_cp_trigger_queue(ddata->dev, buf);
 	if (ret)
-		pr_err("%s error(%d)\n", __func__, ret);
+		pr_debug("%s error(%d)\n", __func__, ret);
 
 	return count;
 }
@@ -750,7 +750,7 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 	int ret = 0;
 
 	if (!ddata) {
-		pr_err("%s no ddata\n", __func__);
+		pr_debug("%s no ddata\n", __func__);
 		return -ENODEV;
 	}
 
@@ -761,7 +761,7 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 	kworker_task = kthread_run(kthread_worker_fn, &ddata->kworker, "sec_vibrator");
 
 	if (IS_ERR(kworker_task)) {
-		pr_err("Failed to create message pump task\n");
+		pr_debug("Failed to create message pump task\n");
 		ret = -ENOMEM;
 		goto err_kthread;
 	}
@@ -774,14 +774,14 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 	ddata->cdev.name = "vibrator";
 	ret = devm_led_classdev_register(ddata->dev, &ddata->cdev);
 	if (ret < 0) {
-		pr_err("led class register fail\n");
+		pr_debug("led class register fail\n");
 		goto err_led_class;
 	}
 
 	ret = sysfs_create_group(&ddata->cdev.dev->kobj, &led_vibrator_attr_group);
 	if (ret) {
 		ret = -ENODEV;
-		pr_err("Failed to create led sysfs1 %d\n", ret);
+		pr_debug("Failed to create led sysfs1 %d\n", ret);
 		goto err_led_sysfs;
 	}
 #endif
@@ -800,7 +800,7 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 	ret = sysfs_create_group(&ddata->to_dev->kobj, &sec_vibrator_attr_group);
 	if (ret) {
 		ret = -ENODEV;
-		pr_err("Failed to create sysfs1 %d\n", ret);
+		pr_debug("Failed to create sysfs1 %d\n", ret);
 		goto err_sysfs1;
 	}
 
@@ -808,14 +808,14 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 		ret = sysfs_create_file(&ddata->to_dev->kobj, &dev_attr_intensity.attr);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs2 %d\n", ret);
+			pr_debug("Failed to create sysfs2 %d\n", ret);
 			goto err_sysfs2;
 		}
 #if defined(CONFIG_SEC_VIBRATOR)
 		ret = sysfs_create_file(&ddata->cdev.dev->kobj, &dev_attr_intensity.attr);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create led sysfs2 %d\n", ret);
+			pr_debug("Failed to create led sysfs2 %d\n", ret);
 			goto err_sysfs2;
 		}
 #endif
@@ -826,14 +826,14 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 		ret = sysfs_create_file(&ddata->to_dev->kobj, &dev_attr_force_touch_intensity.attr);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs3 %d\n", ret);
+			pr_debug("Failed to create sysfs3 %d\n", ret);
 			goto err_sysfs3;
 		}
 #if defined(CONFIG_SEC_VIBRATOR)
 		ret = sysfs_create_file(&ddata->cdev.dev->kobj, &dev_attr_force_touch_intensity.attr);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create led sysfs3 %d\n", ret);
+			pr_debug("Failed to create led sysfs3 %d\n", ret);
 			goto err_sysfs3;
 		}
 #endif
@@ -844,14 +844,14 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 		ret = sysfs_create_group(&ddata->to_dev->kobj, &multi_freq_attr_group);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs4 %d\n", ret);
+			pr_debug("Failed to create sysfs4 %d\n", ret);
 			goto err_sysfs4;
 		}
 #if defined(CONFIG_SEC_VIBRATOR)
 		ret = sysfs_create_group(&ddata->cdev.dev->kobj, &multi_freq_attr_group);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs4 %d\n", ret);
+			pr_debug("Failed to create sysfs4 %d\n", ret);
 			goto err_sysfs4;
 		}
 #endif
@@ -862,20 +862,20 @@ int sec_vibrator_register(struct sec_vibrator_drvdata *ddata)
 		ret = sysfs_create_group(&ddata->to_dev->kobj, &cp_trigger_attr_group);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs5 %d\n", ret);
+			pr_debug("Failed to create sysfs5 %d\n", ret);
 			goto err_sysfs5;
 		}
 #if defined(CONFIG_SEC_VIBRATOR)
 		ret = sysfs_create_group(&ddata->cdev.dev->kobj, &cp_trigger_attr_group);
 		if (ret) {
 			ret = -ENODEV;
-			pr_err("Failed to create sysfs5 %d\n", ret);
+			pr_debug("Failed to create sysfs5 %d\n", ret);
 			goto err_sysfs5;
 		}
 #endif
 	}
 
-	pr_info("%s done\n", __func__);
+	pr_debug("%s done\n", __func__);
 
 	return ret;
 
@@ -970,7 +970,7 @@ extern int haptic_homekey_press(void)
 	sec_vibrator_set_force_touch_intensity(ddata, ddata->force_touch_intensity);
 	sec_vibrator_set_enable(ddata, true);
 
-	pr_info("%s freq:%d, intensity:%d, time:%d\n",
+	pr_debug("%s freq:%d, intensity:%d, time:%d\n",
 		__func__, FREQ_PRESS, ddata->force_touch_intensity, ddata->timeout);
 	mutex_unlock(&ddata->vib_mutex);
 
@@ -998,7 +998,7 @@ extern int haptic_homekey_release(void)
 	sec_vibrator_set_force_touch_intensity(ddata, ddata->force_touch_intensity);
 	sec_vibrator_set_enable(ddata, true);
 
-	pr_info("%s freq:%d, intensity:%d, time:%d\n",
+	pr_debug("%s freq:%d, intensity:%d, time:%d\n",
 		__func__, FREQ_RELEASE, ddata->force_touch_intensity, ddata->timeout);
 	mutex_unlock(&ddata->vib_mutex);
 
