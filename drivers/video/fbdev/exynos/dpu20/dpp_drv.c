@@ -576,8 +576,9 @@ static int dpp_set_config(struct dpp_device *dpp)
 		dpp_dbg("dpp%d is started\n", dpp->id);
 		dpp_reg_init(dpp->id, dpp->attr);
 
+	if (dpp->res.dma_irq)
 		enable_irq(dpp->res.dma_irq);
-		if (test_bit(DPP_ATTR_DPP, &dpp->attr))
+	if (dpp->res.irq)
 			enable_irq(dpp->res.irq);
 	}
 
@@ -624,7 +625,7 @@ static int dpp_stop(struct dpp_device *dpp, bool reset)
 	DPU_EVENT_LOG(DPU_EVT_DPP_STOP, &dpp->sd, ktime_set(0, 0));
 
 	disable_irq(dpp->res.dma_irq);
-	if (test_bit(DPP_ATTR_DPP, &dpp->attr))
+	if (dpp->res.irq)
 		disable_irq(dpp->res.irq);
 
 	del_timer(&dpp->d.op_timer);
@@ -923,6 +924,7 @@ static void dpp_parse_dt(struct dpp_device *dpp, struct device *dev)
 	dpp->dev = dev;
 }
 
+#ifdef CONFIG_DRM_SAMSUNG_ENABLE_DEBUG_IRQS
 static irqreturn_t dpp_irq_handler(int irq, void *priv)
 {
 	struct dpp_device *dpp = priv;
@@ -1014,11 +1016,14 @@ irq_end:
 	spin_unlock(&dpp->dma_slock);
 	return IRQ_HANDLED;
 }
+#endif
 
 static int dpp_init_resources(struct dpp_device *dpp, struct platform_device *pdev)
 {
 	struct resource *res;
+#ifdef CONFIG_DRM_SAMSUNG_ENABLE_DEBUG_IRQS
 	int ret;
+#endif
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res) {
@@ -1058,6 +1063,7 @@ static int dpp_init_resources(struct dpp_device *dpp, struct platform_device *pd
 	}
 	dpp_info("dma irq no = %lld\n", res->start);
 
+#ifdef CONFIG_DRM_SAMSUNG_ENABLE_DEBUG_IRQS
 	dpp->res.dma_irq = res->start;
 	ret = devm_request_irq(dpp->dev, res->start, dma_irq_handler, 0,
 			pdev->name, dpp);
@@ -1066,6 +1072,7 @@ static int dpp_init_resources(struct dpp_device *dpp, struct platform_device *pd
 		return -EINVAL;
 	}
 	disable_irq(dpp->res.dma_irq);
+#endif
 
 	if (test_bit(DPP_ATTR_DPP, &dpp->attr)) {
 		res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
@@ -1089,6 +1096,7 @@ static int dpp_init_resources(struct dpp_device *dpp, struct platform_device *pd
 		}
 		dpp_info("dpp irq no = %lld\n", res->start);
 
+#ifdef CONFIG_DRM_SAMSUNG_ENABLE_DEBUG_IRQS
 		dpp->res.irq = res->start;
 		ret = devm_request_irq(dpp->dev, res->start, dpp_irq_handler, 0,
 				pdev->name, dpp);
@@ -1097,6 +1105,8 @@ static int dpp_init_resources(struct dpp_device *dpp, struct platform_device *pd
 			return -EINVAL;
 		}
 		disable_irq(dpp->res.irq);
+#endif
+
 	}
 
 	return 0;
