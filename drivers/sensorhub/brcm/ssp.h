@@ -69,7 +69,7 @@
 #undef CONFIG_HAS_EARLYSUSPEND
 #endif
 
-#define SSP_DBG		0
+#define SSP_DBG		1
 
 #define SUCCESS		1
 #define FAIL		0
@@ -87,7 +87,7 @@
 #define ssp_dbg(format, ...) \
 	pr_info(format, ##__VA_ARGS__)
 #else
-#define ssp_dbg(format, ...)
+#define ssp_dbg(format, ...) ((void)0)
 #endif
 
 #if SSP_FUNC_DBG
