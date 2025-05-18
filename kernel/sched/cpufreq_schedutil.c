@@ -218,9 +218,8 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	    !cpufreq_can_do_remote_dvfs(sg_policy->policy))
 		return false;
 
-	/* If the last frequency wasn't set yet then we can still amend it */
 	if (sg_policy->work_in_progress)
-		return true;
+		return false;
 
 	if (unlikely(sg_policy->need_freq_update)) {
 		sg_policy->need_freq_update = false;
